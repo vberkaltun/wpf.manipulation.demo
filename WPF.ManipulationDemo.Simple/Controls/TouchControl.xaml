@@ -5,15 +5,26 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:WPF.ManipulationDemo.Simple.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="300"
-    d:DesignWidth="300"
+    x:Name="UC"
     mc:Ignorable="d">
-    <Grid>
-        <Rectangle
-            Name="BasicRect"
-            Width="300"
-            Height="300"
-            Fill="Red"
-            IsManipulationEnabled="True" />
+
+    <Grid Width="{Binding ElementName=UC, Path=ActualWidth}" Height="{Binding ElementName=BasicRect, Path=ActualHeight}">
+        <Border>
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="10"
+                    Opacity="0.7"
+                    ShadowDepth="0"
+                    Color="Black" />
+            </Border.Effect>
+
+            <Rectangle
+                Name="BasicRect"
+                Fill="White"
+                IsManipulationEnabled="True"
+                RadiusX="50"
+                RadiusY="50" />
+
+        </Border>
     </Grid>
 </UserControl>
