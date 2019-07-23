@@ -27,25 +27,19 @@ namespace WPF.ManipulationDemo.Simple.Controls
             scale = new ScaleTransform(1, 1);
             rotation = new RotateTransform(0);
 
-
             transformGroup.Children.Add(rotation);
             transformGroup.Children.Add(scale);
             transformGroup.Children.Add(translation);
 
-
-            BasicRect.RenderTransform = transformGroup;
+            this.BasicRect.RenderTransform = transformGroup;
         }
 
-        protected override void OnManipulationStarting(ManipulationStartingEventArgs e)
-        {
-            e.ManipulationContainer = this;
-        }
+        protected override void OnManipulationStarting(ManipulationStartingEventArgs e) => e.ManipulationContainer = this;
 
         protected override void OnManipulationDelta(ManipulationDeltaEventArgs e)
         {
             // the center never changes in this sample, although we always compute it.
-            Point center = new Point(
-                 BasicRect.RenderSize.Width / 2.0, BasicRect.RenderSize.Height / 2.0);
+            Point center = new Point(BasicRect.RenderSize.Width / 2.0, BasicRect.RenderSize.Height / 2.0);
 
             // apply the rotation at the center of the rectangle if it has changed
             rotation.CenterX = center.X;
