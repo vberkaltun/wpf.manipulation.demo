@@ -11,8 +11,8 @@ pool:
 
 variables:
   solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  buildPlatform: 'x64'
+  buildConfiguration: 'release'
 
 steps:
 - task: NuGetToolInstaller@1
@@ -21,13 +21,60 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: VSBuild@1
+- task: MSBuild@1
   inputs:
     solution: '$(solution)'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+    msbuildArchitecture: 'x64'
+    msbuildArguments: >-
+        -p:AppxBundle=Always
+        -p:AppxBundlePlatforms="$(buildPlatform)"
+        -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
+        -p:AppxSymbolPackageEnabled=false
+        -p:UapAppxPackageBuildMode=SideLoadOnly
 
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+        $sourceDirectory = Join-Path -ChildPath "ci\assets\*" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
+        $targetDirectory = Join-Path -ChildPath "AppxPackages" -Path $($Env:BUILD_ARTIFACTSTAGINGDIRECTORY + "\")
+
+        Write-Host "Source directory: '$($sourceDirectory)'"
+        Write-Host "Target directory: '$($targetDirectory)'"
+
+        If ([string]::IsNullOrEmpty($sourceDirectory) -or
+            [string]::IsNullOrEmpty($targetDirectory) -or
+            -not (Test-Path $sourceDirectory) -or
+            -not (Test-Path $targetDirectory))
+        {
+            Write-Host "No action due to wrong inputs, terminating..."
+            exit
+        }
+
+        $postFix = "*_Test"
+        $subPath = Get-ChildItem -Path $targetDirectory `
+            | Where-Object { $_.Name -like $postFix -and $_.PSIsContainer } `
+            | Select-Object -ExpandProperty FullName
+
+        If ([string]::IsNullOrEmpty($subPath) -or
+            -not (Test-Path $subPath))
+        {
+            Write-Host "No subdirectory with '$($postFix)' postfix found in '$($subPath)', terminating..."
+            exit
+        }
+
+        Copy-item -Force -Recurse $sourceDirectory -Destination $subPath
+        Write-Host "Files in '$($sourceDirectory)' successfully copied to '$($subPath)'"
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: UWP installer'
+  inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)\AppxPackages\
+      ArtifactName: Installer
