@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Exporter": {
+      "commandName": "Project",
+      "commandLineArgs": "--path \"C:\\Users\\berk.altun\\Desktop\\keke.txt\""
+    }
+  }
+}
