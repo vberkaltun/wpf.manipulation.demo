@@ -1,0 +1,29 @@
+parameters:
+- name: solution
+  type: string
+- name: msBuildArguments
+  type: string
+- name: executeArguments
+  type: string
+
+steps:
+  - task: NuGetCommand@2
+    displayName: Restore NuGet packages
+    inputs:
+      solution: '**\\${{ parameters.solution }}'
+      selectOrConfig: config
+
+  - task: MSBuild@1
+    displayName: Build ${{ parameters.solution }}
+    inputs:
+      solution: '**\\${{ parameters.solution }}'
+      platform: '$(BuildPlatform)'
+      configuration: '$(BuildConfiguration)'
+      msbuildArchitecture: 'x64'
+      msbuildArguments: '${{ parameters.msBuildArguments }}'
+
+  - task: PowerShell@2
+    displayName: Execute .exe file with parameters
+    inputs:
+      targetType: 'inline'
+      script: '${{ parameters.executeArguments }}' 

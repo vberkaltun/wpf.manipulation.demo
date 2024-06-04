@@ -11,8 +11,8 @@ pool:
 
 variables:
   solution: '**/*.sln'
-  buildPlatform: 'x64'
-  buildConfiguration: 'release'
+  BuildPlatform: 'x64'
+  BuildConfiguration: 'release'
 
 jobs:
 - job: BuildTestDeploy
@@ -26,25 +26,18 @@ jobs:
     - vstest
   steps:
 
-  - task: NuGetCommand@2
-    displayName: Restore NuGet packages
-    inputs:
-      solution: '**/Exporter.csproj'
-      selectOrConfig: config
-  - task: VSBuild@1
-    inputs:
-      solution: '**/Exporter.csproj'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
-      msbuildArgs: '/t:publish /p:PublishSingleFile=True /p:RuntimeIdentifier=win-x64 /p:outputpath=$(Build.ArtifactStagingDirectory)\'
-  - task: PowerShell@2
-    displayName: Execute .exe file with parameters
-    inputs:
-      targetType: 'inline'
-      script: |
-        [String]$csv = 'D:\a\1\s\ci\assets\demo.csv'
-        $args = @($csv)
-        & '$(Build.ArtifactStagingDirectory)\\**\\Exporter.exe' $args 
+  - template: generate-dependency-csv-file.yml
+    parameters:
+      solution: 'Exporter.csproj'
+      msBuildArguments: >-
+        -t:publish
+        -p:PublishSingleFile=True
+        -p:RuntimeIdentifier=win-x64
+        -p:outputPath="$(Build.ArtifactStagingDirectory)\\Exporter\\"
+      executeArguments: >-
+        $(Build.ArtifactStagingDirectory)\\**\\Exporter.exe
+        '--path'
+        '$(System.DefaultWorkingDirectory)\ci\assets\demo.csv'
 
   - task: NuGetToolInstaller@1
   
@@ -55,20 +48,20 @@ jobs:
   - task: MSBuild@1
     inputs:
       solution: '$(solution)'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
+      platform: '$(BuildPlatform)'
+      configuration: '$(BuildConfiguration)'
       msbuildArchitecture: 'x64'
       msbuildArguments: >-
           -p:AppxBundle=Always
-          -p:AppxBundlePlatforms="$(buildPlatform)"
+          -p:AppxBundlePlatforms="$(BuildPlatform)"
           -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
           -p:AppxSymbolPackageEnabled=false
           -p:UapAppxPackageBuildMode=SideLoadOnly
   
   - task: VSTest@2
     inputs:
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
+      platform: '$(BuildPlatform)'
+      configuration: '$(BuildConfiguration)'
   
   - task: PowerShell@2
     inputs:
