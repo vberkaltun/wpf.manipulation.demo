@@ -1,29 +1,33 @@
 parameters:
-- name: solution
+- name: executableName
   type: string
-- name: msBuildArguments
+  default: 'Exporter'
+- name: csvFileName
   type: string
-- name: executeArguments
-  type: string
+  default: 'Applus Dependency Map.csv'
 
 steps:
-  - task: NuGetCommand@2
-    displayName: Restore NuGet packages
-    inputs:
-      solution: '**\\${{ parameters.solution }}'
-      selectOrConfig: config
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+        $sourceDirectory = $($Env:BUILD_SOURCESDIRECTORY + "\")
+        $targetDirectory = Join-Path -ChildPath "ci\assets\${{ parameters.csvFileName }}" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
 
-  - task: MSBuild@1
-    displayName: Build ${{ parameters.solution }}
-    inputs:
-      solution: '**\\${{ parameters.solution }}'
-      platform: '$(BuildPlatform)'
-      configuration: '$(BuildConfiguration)'
-      msbuildArchitecture: 'x64'
-      msbuildArguments: '${{ parameters.msBuildArguments }}'
+        Write-Host "Source directory: '$($sourceDirectory)'"
+        Write-Host "Target directory: '$($targetDirectory)'"
 
-  - task: PowerShell@2
-    displayName: Execute .exe file with parameters
-    inputs:
-      targetType: 'inline'
-      script: '${{ parameters.executeArguments }}' 
+        $fileName = "${{ parameters.executableName }}.exe"
+        $filePath = Get-ChildItem -Path $sourceDirectory -Recurse -File `
+            | Where-Object { $_.Name -eq $fileName } `
+            | Select-Object -ExpandProperty FullName
+
+        If ([string]::IsNullOrEmpty($filePath) -or
+            -not (Test-Path $filePath))
+        {
+            Write-Host "No file found, terminating..."
+            exit
+        }
+
+        Write-Host "A file found at '$filePath'"
+        & $filePath '--path' $targetDirectory

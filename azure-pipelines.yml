@@ -26,32 +26,19 @@ jobs:
     - vstest
   steps:
 
-  - template: generate-dependency-csv-file.yml
-    parameters:
-      solution: 'Exporter.csproj'
-      msBuildArguments: >-
-        -t:publish
-        -p:PublishSingleFile=True
-        -p:RuntimeIdentifier=win-x64
-        -p:outputPath="$(Build.ArtifactStagingDirectory)\\Exporter\\"
-      executeArguments: >-
-        $(Build.ArtifactStagingDirectory)\\**\\Exporter.exe
-        '--path'
-        '$(System.DefaultWorkingDirectory)\ci\assets\demo.csv'
-
   - task: NuGetToolInstaller@1
   
   - task: NuGetCommand@2
     inputs:
       restoreSolution: '$(solution)'
   
-  - task: MSBuild@1
+  - task: VSBuild@1
     inputs:
       solution: '$(solution)'
       platform: '$(BuildPlatform)'
       configuration: '$(BuildConfiguration)'
       msbuildArchitecture: 'x64'
-      msbuildArguments: >-
+      msbuildArgs: >-
           -p:AppxBundle=Always
           -p:AppxBundlePlatforms="$(BuildPlatform)"
           -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
@@ -63,6 +50,8 @@ jobs:
       platform: '$(BuildPlatform)'
       configuration: '$(BuildConfiguration)'
   
+  - template: generate-dependency-csv-file.yml
+
   - task: PowerShell@2
     inputs:
       targetType: 'inline'
