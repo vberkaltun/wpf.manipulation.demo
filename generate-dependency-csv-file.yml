@@ -1,33 +1,60 @@
 parameters:
+
 - name: executableName
   type: string
   default: 'Exporter'
+
 - name: csvFileName
   type: string
   default: 'Applus Dependency Map.csv'
 
 steps:
 - task: PowerShell@2
+  displayName: 'Create Calibration Dependencies'
   inputs:
     targetType: 'inline'
     script: |
         $sourceDirectory = $($Env:BUILD_SOURCESDIRECTORY + "\")
         $targetDirectory = Join-Path -ChildPath "ci\assets\${{ parameters.csvFileName }}" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
+        $firstOccurrence = FindExecutable -directory $sourceDirectory "\${{ parameters.executableName }}"
 
         Write-Host "Source directory: '$($sourceDirectory)'"
         Write-Host "Target directory: '$($targetDirectory)'"
 
-        $fileName = "${{ parameters.executableName }}.exe"
-        $filePath = Get-ChildItem -Path $sourceDirectory -Recurse -File `
-            | Where-Object { $_.Name -eq $fileName } `
-            | Select-Object -ExpandProperty FullName
-
-        If ([string]::IsNullOrEmpty($filePath) -or
-            -not (Test-Path $filePath))
+        if ($firstOccurrence)
         {
-            Write-Host "No file found, terminating..."
-            exit
+            Write-Host "A file found at '$filePath'"
+            & $firstOccurrence '--path' $targetDirectory
         }
-
-        Write-Host "A file found at '$filePath'"
-        & $filePath '--path' $targetDirectory
+        else
+        {
+            Write-Output "No file found."
+        }
+        
+        # Function to search for the executable file in the specified directory and its subdirectories
+        function FindExecutable
+        {
+            param (
+                [string]$directory,
+                [string]$fileName)
+        
+            # Get all subdirectories in the current directory
+            $subDirectories = Get-ChildItem -Path $directory -Recurse -Directory `
+                | Where-Object { $_.name -eq $fileName } `
+                | Select-Object fullName
+        
+            foreach ($subDirectory in $subDirectories)
+            {
+                # Look for files ending with "*.exe" in this directory and its subdirectories
+                $files = Get-ChildItem -Path $subDirectory.FullName -Recurse -File `
+                    | Where-Object { $_.name -like $("*" + $fileName + ".exe") } `
+                    | Select-Object -First 1
+        
+                if ($files.Count -gt 0)
+                {
+                    return $files[0].FullName
+                }
+            }
+        
+            return $null
+        }
