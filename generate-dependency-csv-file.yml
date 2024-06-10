@@ -1,6 +1,10 @@
 parameters:
 
-- name: executableName
+- name: filePath
+  type: string
+  default: 'Exporter'
+
+- name: fileName
   type: string
   default: 'Exporter'
 
@@ -13,34 +17,18 @@ steps:
   displayName: 'Create Calibration Dependencies'
   inputs:
     targetType: 'inline'
-    script: |
-        $sourceDirectory = $($Env:BUILD_SOURCESDIRECTORY + "\")
-        $targetDirectory = Join-Path -ChildPath "ci\assets\${{ parameters.csvFileName }}" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
-        $firstOccurrence = FindExecutable -directory $sourceDirectory "\${{ parameters.executableName }}"
-
-        Write-Host "Source directory: '$($sourceDirectory)'"
-        Write-Host "Target directory: '$($targetDirectory)'"
-
-        if ($firstOccurrence)
-        {
-            Write-Host "A file found at '$filePath'"
-            & $firstOccurrence '--path' $targetDirectory
-        }
-        else
-        {
-            Write-Output "No file found."
-        }
-        
+    script: |        
         # Function to search for the executable file in the specified directory and its subdirectories
         function FindExecutable
         {
             param (
-                [string]$directory,
+                [string]$sourceDirectory,
+                [string]$filePath,
                 [string]$fileName)
         
-            # Get all subdirectories in the current directory
-            $subDirectories = Get-ChildItem -Path $directory -Recurse -Directory `
-                | Where-Object { $_.name -eq $fileName } `
+            # Get all subdirectories in the source directory
+            $subDirectories = Get-ChildItem -Path $sourceDirectory -Recurse -Directory `
+                | Where-Object { $_.name -eq $filePath } `
                 | Select-Object fullName
         
             foreach ($subDirectory in $subDirectories)
@@ -57,4 +45,25 @@ steps:
             }
         
             return $null
+        }
+
+        # Define the starting directory for the search
+        $sourceDirectory = $($Env:BUILD_SOURCESDIRECTORY + "\")
+        $targetDirectory = Join-Path -ChildPath "ci\assets\${{ parameters.csvFileName }}" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
+        $firstOccurrence = FindExecutable `
+            -sourceDirectory $sourceDirectory `
+            -filePath "${{ parameters.filePath }}" `
+            -fileName "${{ parameters.fileName }}"
+
+        Write-Host "Source directory: '$($sourceDirectory)'"
+        Write-Host "Target directory: '$($targetDirectory)'"
+
+        if ($firstOccurrence)
+        {
+            Write-Host "A file found at '$firstOccurrence'"
+            & $firstOccurrence '--path' $targetDirectory
+        }
+        else
+        {
+            Write-Output "No file found."
         }
