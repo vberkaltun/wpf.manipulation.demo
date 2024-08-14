@@ -1,0 +1,38 @@
+mode: ContinuousDeployment
+
+branches:
+  master:
+    tag: ''
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+
+  release/iwex:
+    tag: 'iwex'
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+
+  release/workpreparation:
+    tag: 'workpreparation'
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+
+  hotfix:
+    tag: 'fix'
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+
+  develop:
+    tag: 'develop'
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+
+  feature:
+    tag: 'feature'
+    increment: None
+    versioningMode: ContinuousDeployment
+    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
