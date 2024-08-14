@@ -34,44 +34,12 @@ steps:
         -p:AppxSymbolPackageEnabled=false
         -p:UapAppxPackageBuildMode=SideLoadOnly
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
 
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: |
-        $sourceDirectory = Join-Path -ChildPath "ci\assets\*" -Path $($Env:BUILD_SOURCESDIRECTORY + "\")
-        $targetDirectory = Join-Path -ChildPath "AppxPackages" -Path $($Env:BUILD_ARTIFACTSTAGINGDIRECTORY + "\")
-
-        Write-Host "Source directory: '$($sourceDirectory)'"
-        Write-Host "Target directory: '$($targetDirectory)'"
-
-        If ([string]::IsNullOrEmpty($sourceDirectory) -or
-            [string]::IsNullOrEmpty($targetDirectory) -or
-            -not (Test-Path $sourceDirectory) -or
-            -not (Test-Path $targetDirectory))
-        {
-            Write-Host "No action due to wrong inputs, terminating..."
-            exit
-        }
-
-        $postFix = "*_Test"
-        $subPath = Get-ChildItem -Path $targetDirectory `
-            | Where-Object { $_.Name -like $postFix -and $_.PSIsContainer } `
-            | Select-Object -ExpandProperty FullName
-
-        If ([string]::IsNullOrEmpty($subPath) -or
-            -not (Test-Path $subPath))
-        {
-            Write-Host "No subdirectory with '$($postFix)' postfix found in '$($subPath)', terminating..."
-            exit
-        }
-
-        Copy-item -Force -Recurse $sourceDirectory -Destination $subPath
-        Write-Host "Files in '$($sourceDirectory)' successfully copied to '$($subPath)'"
+- script: echo %Action%%BuildVersion%
+  displayName: 'Update build number to SemVer'
+  env:
+    Action: '##vso[build.updatebuildnumber]'
+    BuildVersion: '$(GitVersion.FullSemVer)'
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: UWP installer'
