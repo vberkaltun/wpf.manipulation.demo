@@ -1,37 +1,35 @@
-mode: ContinuousDeployment
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{WeightedPreReleaseNumber ?? 0}'
+
+label: '{BranchName}'
+increment: None
+
+tag-prefix: ^release(?:/[^/]+)?/[vV]
+commit-date-format: yyyy-MM-dd
+
 branches:
-  master:
-    tag: ''
+  main:
+    mode: ContinuousDelivery
+    label: ''
     increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+    regex: ^master$
 
-  release/iwex:
-    tag: 'iwex'
+  release:
+    mode: ManualDeployment
+    label: beta
     increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
-
-  release/workpreparation:
-    tag: 'workpreparation'
-    increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
-
-  hotfix:
-    tag: 'fix'
-    increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+    regex: ^release/(?<BranchName>.+)$
+    source-branches:
+    - main
 
   develop:
-    tag: 'develop'
+    mode: ContinuousDelivery
+    label: alpha
     increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
-
-  feature:
-    tag: 'feature'
-    increment: None
-    versioningMode: ContinuousDeployment
-    versionFormat: '{Major}.{Minor}.{Patch}-{PreReleaseTag}.{CommitsSinceVersionSource}+{ShortSha}'
+    regex: ^develop$
+    source-branches:
+    - main
+    
+ignore:
+  sha: []
