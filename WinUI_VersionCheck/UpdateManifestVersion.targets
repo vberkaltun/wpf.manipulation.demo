@@ -44,7 +44,7 @@
     </Task>
   </UsingTask>
 
-  <Target Name="UpdateManifestVersion" AfterTargets="GetVersion" Condition="'$(Configuration)' == 'Release'">
+  <Target Name="UpdateManifestVersion" BeforeTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <!-- If the BuildMetaData is not set, use the PreReleaseNumber. This is the case on the develop branch. -->
     <PropertyGroup Condition="'$(GitVersion_BuildMetaData)' == ''">
       <GitVersion_BuildMetaData>$(GitVersion_PreReleaseNumber)</GitVersion_BuildMetaData>

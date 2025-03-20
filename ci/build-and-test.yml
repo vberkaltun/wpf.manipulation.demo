@@ -32,11 +32,3 @@ steps:
       configuration: '$(BuildConfiguration)'
       msbuildArguments: '${{ parameters.msbuildArguments }}'
       logProjectEvents: true
-
-  # Update pipeline build number to semantic version
-  # https://github.com/GitTools/GitVersion/issues/2552
-  - script: echo %Action%%BuildVersion%
-    displayName: 'Update build number to SemVer'
-    env:
-      Action: '##vso[build.updatebuildnumber]'
-      BuildVersion: '$(GitVersion.FullSemVer)'
