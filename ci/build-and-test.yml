@@ -1,0 +1,42 @@
+parameters:
+- name: solution
+  type: string
+- name: msbuildArguments
+  type: string
+
+steps:
+  - checkout: self
+    clean: true
+    lfs: true
+    persistCredentials: true
+    fetchTags: false
+    
+  - task: NuGetToolInstaller@1
+    displayName: 'Update NuGet'
+    inputs:
+      checkLatest: true
+
+  - task: NuGetCommand@2
+    displayName: Restore NuGet packages
+    inputs:
+      solution: '${{ parameters.solution }}'
+      selectOrConfig: config
+      nugetConfigPath: nuget.config
+
+  - task: MSBuild@1
+    displayName: Build App
+    inputs:
+      solution: 'targets.build'
+      msbuildArchitecture: 'x64'
+      platform: '$(BuildPlatform)'
+      configuration: '$(BuildConfiguration)'
+      msbuildArguments: '${{ parameters.msbuildArguments }}'
+      logProjectEvents: true
+
+  # Update pipeline build number to semantic version
+  # https://github.com/GitTools/GitVersion/issues/2552
+  - script: echo %Action%%BuildVersion%
+    displayName: 'Update build number to SemVer'
+    env:
+      Action: '##vso[build.updatebuildnumber]'
+      BuildVersion: '$(GitVersion.FullSemVer)'

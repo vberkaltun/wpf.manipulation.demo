@@ -1,0 +1,69 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- http://blogs.clariusconsulting.net/kzu/how-to-perform-regular-expression-based-replacements-on-files-with-msbuild/ -->
+  <UsingTask TaskName="RegexTransform"
+             TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Code Type="Fragment"
+            Language="cs">
+      <![CDATA[
+      foreach(var item in Items)
+      {
+        string fileName = item.GetMetadata("FullPath");
+        string find = item.GetMetadata("Find");
+        string replaceWith = item.GetMetadata("ReplaceWith");
+        string optionsValue = item.GetMetadata("Options") ?? "";
+        var options = string.IsNullOrWhiteSpace(optionsValue) ? RegexOptions.None : (RegexOptions)Enum.Parse(typeof(RegexOptions), optionsValue.Replace('|', ','));
+
+        if(!File.Exists(fileName))
+        {
+          Log.LogError("Could not find file: {0}", fileName);
+          return false;
+        }
+        string content = File.ReadAllText(fileName);
+        File.WriteAllText(
+          fileName,
+          Regex.Replace(
+            content,
+            find,
+            replaceWith,
+            options
+          ),
+          Encoding.UTF8
+        );
+      }
+      ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="UpdateManifestVersion" AfterTargets="GetVersion" Condition="'$(Configuration)' == 'Release'">
+    <!-- If the BuildMetaData is not set, use the PreReleaseNumber. This is the case on the develop branch. -->
+    <PropertyGroup Condition="'$(GitVersion_BuildMetaData)' == ''">
+      <GitVersion_BuildMetaData>$(GitVersion_PreReleaseNumber)</GitVersion_BuildMetaData>
+    </PropertyGroup>
+    <!-- If the PreReleaseNumber is also not set, use 0. This is the case on the master branch.  -->
+    <PropertyGroup Condition="'$(GitVersion_BuildMetaData)' == ''">
+      <GitVersion_BuildMetaData>0</GitVersion_BuildMetaData>
+    </PropertyGroup>
+    <PropertyGroup>
+      <ManifestVersion>$(GitVersion_MajorMinorPatch).$(GitVersion_BuildMetaData)</ManifestVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <RegexTransform Include="$(SolutionDir)\**\*.appxmanifest">
+          <Find><![CDATA[ Version="\d+\.\d+\.\d+\.\d+"]]></Find>
+          <ReplaceWith><![CDATA[ Version="$(ManifestVersion)"]]></ReplaceWith>
+      </RegexTransform>
+    </ItemGroup>
+    <RegexTransform Items="@(RegexTransform)" />
+    <Message Text="Updated AppX manifest version to: $(ManifestVersion)" />
+  </Target>
+
+</Project>
