@@ -24,18 +24,42 @@ jobs:
     - msbuild
     - vstest
   steps:
-  - template: build-and-test.yml
-    parameters:
-      solution: 'WinUI_VersionCheck.sln'
-      msbuildArguments: >-
-        -p:AppxBundle=Always
-        -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
-        -p:AppxBundlePlatforms=$(BuildPlatform)
-        -p:AppxSymbolPackageEnabled=false
-        -p:GenerateAppxPackageOnBuild=True
+    - checkout: self
+      clean: true
+      lfs: true
+      persistCredentials: true
+      fetchTags: false
+      
+    - task: NuGetToolInstaller@1
+      displayName: 'Update NuGet'
+      inputs:
+        checkLatest: true
+  
+    - task: NuGetCommand@2
+      displayName: Restore NuGet packages
+      inputs:
+        solution: 'WinUI_VersionCheck.sln'
+        selectOrConfig: config
+        nugetConfigPath: nuget.config
+  
+    - task: VSBuild@1
+      inputs:
+        solution: 'WinUI_VersionCheck.sln'
+        vsVersion: '17.0'
+        msbuildArgs: >-
+          -p:AppxBundle=Always
+          -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
+          -p:AppxBundlePlatforms=$(BuildPlatform)
+          -p:AppxSymbolPackageEnabled=false
+          -p:GenerateAppxPackageOnBuild=True
+        platform: 'x64'
+        configuration: 'release'
+        clean: true
+        restoreNugetPackages: true
+        msbuildArchitecture: 'x64'
 
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: UWP installer'
-    inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)\AppxPackages\
-      ArtifactName: Installer
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: UWP installer'
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\AppxPackages\
+        ArtifactName: Installer
