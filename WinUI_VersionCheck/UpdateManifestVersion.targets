@@ -1,21 +1,42 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Target Name="UpdateManifestVersion" BeforeTargets="CoreBuild" Condition="'$(Configuration)' == 'Release'">
 
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    </ItemGroup>
+    
+    <Target Name="UpdateManifestVersion" BeforeTargets="PreBuildEvent" Condition="'$(Configuration)' == 'Release'">
+
+        <!-- Exec to get GitVersion output as JSON -->
+        <Exec Command="gitversion /output json /showvariable PreReleaseNumber" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" ItemName="Json_PreReleaseNumber" />
+        </Exec>
+        <Exec Command="gitversion /output json /showvariable BuildMetaData" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" ItemName="Json_BuildMetaData" />
+        </Exec>
+        <Exec Command="gitversion /output json /showvariable MajorMinorPatch" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" ItemName="Json_MajorMinorPatch" />
+        </Exec>
+        
         <PropertyGroup>
-            <!-- Ensure BuildMetaData has a value -->
-            <GitVersion_BuildMetaData>$(GitVersion_PreReleaseNumber)</GitVersion_BuildMetaData>
-            <GitVersion_BuildMetaData Condition="'$(GitVersion_BuildMetaData)' == ''">0</GitVersion_BuildMetaData>
+            <Manifest_PreReleaseNumber>$([System.String]::Copy('%(Json_PreReleaseNumber.Identity)'))</Manifest_PreReleaseNumber>
+            <Manifest_BuildMetaData>$([System.String]::Copy('%(Json_BuildMetaData.Identity)'))</Manifest_BuildMetaData>
+            <Manifest_MajorMinorPatch>$([System.String]::Copy('%(Json_MajorMinorPatch.Identity)'))</Manifest_MajorMinorPatch>
 
-            <ManifestVersion>$(GitVersion_MajorMinorPatch).$(GitVersion_BuildMetaData)</ManifestVersion>
+            <!-- Ensure BuildMetaData has a value (either PreReleaseNumber or 0) -->
+            <Manifest_BuildMetaData Condition="'$(Manifest_BuildMetaData)' == ''">$(Manifest_PreReleaseNumber)</Manifest_BuildMetaData>
+            <Manifest_BuildMetaData Condition="'$(Manifest_BuildMetaData)' == ''">0</Manifest_BuildMetaData>
+
+            <!-- Set the final version for the manifest -->
+            <ManifestVersion>$(Manifest_MajorMinorPatch).$(Manifest_BuildMetaData)</ManifestVersion>
             <ManifestFile>$(MSBuildThisFileDirectory)Package.appxmanifest</ManifestFile>
         </PropertyGroup>
 
         <!-- Update the version in the *.appxmanifest -->
         <XmlPoke Condition="Exists('$(ManifestFile)')"
-                 XmlInputPath="$(ManifestFile)"
-                 Query="/dn:Package/dn:Identity/@Version"
-                 Value="$(ManifestVersion)"
-                 Namespaces="&lt;Namespace Prefix='dn' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;" />
+            XmlInputPath="$(ManifestFile)"
+            Query="/dn:Package/dn:Identity/@Version"
+            Value="$(ManifestVersion)"
+            Namespaces="&lt;Namespace Prefix='dn' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;" />
 
         <!-- Print a success message -->
         <Message Text="Updated AppX manifest version to: $(ManifestVersion)" Importance="High" />
