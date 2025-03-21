@@ -41,6 +41,10 @@ jobs:
         solution: 'WinUI_VersionCheck.sln'
         selectOrConfig: config
         nugetConfigPath: nuget.config
+    
+    - task: gitversion/setup@3
+      inputs:
+        versionSpec: '5.12.0'
   
     - task: VSBuild@1
       inputs:
