@@ -1,5 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Target Name="UpdateManifestVersion" AfterTargets="GetVersion" Condition="'$(Configuration)' == 'Release'">
+    <Target Name="UpdateManifestVersion" InitialTargets="Build" Condition="'$(Configuration)' == 'Release'">
 
         <PropertyGroup>
             <!-- Ensure BuildMetaData has a value -->
