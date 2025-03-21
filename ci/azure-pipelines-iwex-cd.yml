@@ -45,6 +45,10 @@ jobs:
     - task: gitversion/setup@3
       inputs:
         versionSpec: '5.12.0'
+    
+    - task: gitversion/command@3
+      inputs:
+        arguments: '-output file -outputfile "$(BaseIntermediateOutputPath)gitversion.json"'
   
     - task: VSBuild@1
       inputs:
