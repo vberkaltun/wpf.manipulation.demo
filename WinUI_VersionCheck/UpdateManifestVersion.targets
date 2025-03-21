@@ -7,15 +7,23 @@
             <GitVersion_BuildMetaData Condition="'$(GitVersion_BuildMetaData)' == ''">0</GitVersion_BuildMetaData>
 
             <ManifestVersion>$(GitVersion_MajorMinorPatch).$(GitVersion_BuildMetaData)</ManifestVersion>
-            <ManifestFile>$(MSBuildThisFileDirectory)Package.appxmanifest</ManifestFile>
+            
+            <AppxPackageManifestFile>$(MSBuildThisFileDirectory)Package.appxmanifest</AppxPackageManifestFile>
+            <AssemblyManifestFile>$(MSBuildThisFileDirectory)app.manifest</AssemblyManifestFile>
         </PropertyGroup>
 
-        <!-- Update the version in the manifest -->
-        <XmlPoke Condition="Exists('$(ManifestFile)')"
-                 XmlInputPath="$(ManifestFile)"
+        <!-- Update the version in the *.appxmanifest -->
+        <XmlPoke Condition="Exists('$(AppxPackageManifestFile)')"
+                 XmlInputPath="$(AppxPackageManifestFile)"
                  Query="/dn:Package/dn:Identity/@Version"
                  Value="$(ManifestVersion)"
                  Namespaces="&lt;Namespace Prefix='dn' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;" />
+        <!-- Update the version in the *.manifest -->
+        <XmlPoke Condition="Exists('$(AssemblyManifestFile)')"
+                 XmlInputPath="$(AssemblyManifestFile)"
+                 Query="/dn:assembly/dn:assemblyIdentity/@version"
+                 Value="$(ManifestVersion)"
+                 Namespaces="&lt;Namespace Prefix='dn' Uri='urn:schemas-microsoft-com:asm.v1' /&gt;" />
 
         <!-- Print a success message -->
         <Message Text="Updated AppX manifest version to: $(ManifestVersion)" Importance="High" />
