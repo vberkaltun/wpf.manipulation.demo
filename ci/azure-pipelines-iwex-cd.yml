@@ -42,22 +42,20 @@ jobs:
         selectOrConfig: config
         nugetConfigPath: nuget.config
   
-    - task: VSBuild@1
+    - task: MSBuild@1
       inputs:
         solution: 'WinUI_VersionCheck.sln'
-        vsVersion: '17.0'
-        msbuildArgs: >-
+        msbuildArchitecture: 'x64'
+        platform: 'x64'
+        configuration: 'release'
+        msbuildArguments: >-
           -p:AppxBundle=Always
           -p:UapAppxPackageBuildMode=CI
           -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
           -p:AppxBundlePlatforms=$(BuildPlatform)
           -p:AppxSymbolPackageEnabled=false
           -p:GenerateAppxPackageOnBuild=True
-        platform: 'x64'
-        configuration: 'release'
-        clean: true
-        restoreNugetPackages: true
-        msbuildArchitecture: 'x64'
+        logProjectEvents: true
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: UWP installer'
