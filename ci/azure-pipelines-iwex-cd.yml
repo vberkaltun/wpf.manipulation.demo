@@ -48,7 +48,7 @@ jobs:
         vsVersion: '17.0'
         msbuildArgs: >-
           -p:AppxBundle=Always
-          -p:UapAppxPackageBuildMode=SideLoadOnly
+          -p:UapAppxPackageBuildMode=CI
           -p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\\AppxPackages\\"
           -p:AppxBundlePlatforms=$(BuildPlatform)
           -p:AppxSymbolPackageEnabled=false
