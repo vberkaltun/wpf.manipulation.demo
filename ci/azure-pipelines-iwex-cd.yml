@@ -55,6 +55,8 @@ jobs:
           -p:AppxBundlePlatforms=$(BuildPlatform)
           -p:AppxSymbolPackageEnabled=false
           -p:GenerateAppxPackageOnBuild=True
+        clean: true
+        restoreNugetPackages: true
         logProjectEvents: true
 
     - task: PublishBuildArtifacts@1
