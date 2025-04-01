@@ -7,7 +7,8 @@
     <Target Name="UpdateManifestVersion" BeforeTargets="PreBuildEvent" Condition="'$(Configuration)' == 'Release'">
 
         <!-- Run GitVersion and save output to JSON file -->
-        <Exec Command="gitversion -output file -outputfile &quot;$(GitVersionOutputFile)&quot;" />
+        <Exec Command="dotnet tool install GitVersion.Tool --global --version 5.12" />
+        <Exec Command="dotnet-gitversion -output file -outputfile &quot;$(GitVersionOutputFile)&quot;" />
 
         <!-- Extract required values from the GitVersion JSON output -->
         <JsonPeek ContentPath="$(GitVersionOutputFile)" Query="$.PreReleaseNumber">
@@ -33,7 +34,7 @@
         </PropertyGroup>
         
         <!-- Update the version in the manifest -->
-        <XmlPoke Condition="Exists('$(ManifestFile)')"
+        <XmlPoke Condition="Exists('$(ManifestFile)') AND Exists('$(GitVersionOutputFile)')"
                  XmlInputPath="$(ManifestFile)"
                  Query="/dn:Package/dn:Identity/@Version"
                  Value="$(ManifestVersion)"
